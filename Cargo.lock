@@ -285,6 +285,7 @@ dependencies = [
  "fern",
  "futures",
  "heim",
+ "integer-encoding",
  "log",
  "memchr",
  "num_cpus",
@@ -696,6 +697,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a5bbe824c507c5da5956355e86a746d82e0e1464f65d862cc5e71da70e94b2c"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "integer-encoding"
+version = "3.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "90c11140ffea82edce8dcd74137ce9324ec24b3cf0175fc9d7e29164da9915b8"
+dependencies = [
+ "async-trait",
+ "tokio",
 ]
 
 [[package]]

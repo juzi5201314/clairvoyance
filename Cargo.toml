@@ -24,3 +24,4 @@ num_cpus = "1"
 chrono = "0.4"
 argh = "0.1"
 parse_duration = "2.1.1"
+integer-encoding = { version = "3.0.2", features = ["tokio_async"] }
