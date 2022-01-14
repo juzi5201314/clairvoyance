@@ -1,8 +1,5 @@
 use byte_unit::{Byte, ByteUnit};
-use plotters::prelude::{
-    AsRelative, ChartBuilder, Color, IntoDrawingArea, LabelAreaPosition, LineSeries, RGBColor,
-    Rectangle, SVGBackend, BLACK, BLUE, GREEN, MAGENTA, RED, WHITE, YELLOW,
-};
+use plotters::prelude::{AsRelative, ChartBuilder, Color, IntoDrawingArea, LabelAreaPosition, LineSeries, RGBColor, Rectangle, SVGBackend, BLACK, BLUE, GREEN, MAGENTA, RED, WHITE, YELLOW, CYAN};
 use std::path::Path;
 
 use crate::data::Data;
@@ -250,18 +247,18 @@ where
     chart.configure_mesh().y_desc("MB").draw()?;
 
     let elems: Vec<(&'static str, RGBColor, Box<dyn Fn(&Data) -> u64>)> = vec![
-        ("bytes_written", GREEN, box |d: &Data| d.io.bytes_written),
+        ("bytes_written", RED, box |d: &Data| d.io.bytes_written),
         ("bytes_read", GREEN, box |d: &Data| d.io.bytes_read),
-        ("disk_written", GREEN, box |d: &Data| {
+        ("disk_written", BLUE, box |d: &Data| {
             d.io.disk_written.unwrap_or_default()
         }),
-        ("disk_read", GREEN, box |d: &Data| {
+        ("disk_read", YELLOW, box |d: &Data| {
             d.io.disk_read.unwrap_or_default()
         }),
-        ("syscall_written", GREEN, box |d: &Data| {
+        ("syscall_written", MAGENTA, box |d: &Data| {
             d.io.syscall_written.unwrap_or_default()
         }),
-        ("syscall_read", GREEN, box |d: &Data| {
+        ("syscall_read", CYAN, box |d: &Data| {
             d.io.syscall_read.unwrap_or_default()
         }),
     ];
