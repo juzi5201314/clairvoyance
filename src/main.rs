@@ -1,10 +1,11 @@
+use std::fs::OpenOptions;
 use std::path::PathBuf;
 use std::time::Duration;
 
 use argh::FromArgs;
-use clairvoyance::draw::{render_cpu_time, render_cpu_usage, render_memory};
 use heim::process::Pid;
 
+use clairvoyance::draw::{render_cpu_time, render_cpu_usage, render_memory};
 use clairvoyance::monitor::Monitor;
 use clairvoyance::shutdown_notify::ShutdownNotify;
 use clairvoyance::store::StoreStream;
@@ -43,6 +44,20 @@ async fn main() {
             while let Some(d) = stream.read().await.unwrap() {
                 data.push(d);
             }
+
+            if args.json {
+                serde_json::to_writer(
+                    OpenOptions::new()
+                        .write(true)
+                        .truncate(true)
+                        .create(true)
+                        .open(args.out_dir.join("result.json"))
+                        .unwrap(),
+                    &data,
+                )
+                .unwrap();
+            }
+
             if args.memory {
                 render_memory(&data, args.out_dir.join("memory.svg")).unwrap();
             }
@@ -129,6 +144,10 @@ struct SubCommandRender {
     #[argh(switch, short = 'c')]
     /// render cpu result
     cpu: bool,
+
+    #[argh(switch, short = 'j')]
+    /// convert intermediate files to json format
+    json: bool,
 }
 
 struct ParseDuration(Duration);

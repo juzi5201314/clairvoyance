@@ -6,8 +6,9 @@ use bincode::{Decode, Encode};
 use byte_unit::Byte;
 #[cfg(target_os = "linux")]
 use heim::process::os::linux::MemoryExt;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Encode, Decode)]
+#[derive(Debug, Clone, Encode, Decode, Serialize, Deserialize)]
 pub struct Data {
     pub memory: Memory,
     pub cpu_time: CpuTime,
@@ -18,10 +19,10 @@ pub struct Data {
     pub net_io: HashMap<String, NetIo>,
 }
 
-#[derive(Clone, Encode, Decode)]
+#[derive(Clone, Encode, Decode, Serialize, Deserialize)]
 pub struct CpuUsage(pub f32);
 
-#[derive(Clone, Encode, Decode)]
+#[derive(Clone, Encode, Decode, Serialize, Deserialize)]
 pub struct Memory {
     pub rss: u64,
     pub vms: u64,
@@ -32,13 +33,13 @@ pub struct Memory {
     pub data: Option<u64>,
 }
 
-#[derive(Clone, Encode, Decode)]
+#[derive(Clone, Encode, Decode, Serialize, Deserialize)]
 pub struct CpuTime {
     pub user: f64,
     pub system: f64,
 }
 
-#[derive(Clone, Encode, Decode)]
+#[derive(Clone, Encode, Decode, Serialize, Deserialize)]
 pub struct Io {
     pub bytes_written: u64,
     pub bytes_read: u64,
@@ -50,7 +51,7 @@ pub struct Io {
     pub syscall_read: Option<u64>,
 }
 
-#[derive(Clone, Encode, Decode)]
+#[derive(Clone, Encode, Decode, Serialize, Deserialize)]
 pub struct NetIo {
     bytes_sent: u64,
     bytes_recv: u64,
