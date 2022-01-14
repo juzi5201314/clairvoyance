@@ -55,15 +55,10 @@ impl StoreStream {
                 }],
         >::new_const();
         bincode::encode_into_std_write(data, &mut buf, *BINCODE_CONFIG)?;
-        let mut encoder = async_compression::tokio::write::DeflateEncoder::with_quality(
-            &mut self.file,
-            async_compression::Level::Fastest,
-        );
 
         // Data的长度
-        encoder.write_varint_async(buf.len()).await?;
-        encoder.write_all(&buf).await?;
-        encoder.flush().await?;
+        self.file.write_varint_async(buf.len()).await?;
+        self.file.write_all(&buf).await?;
         Ok(())
     }
 
@@ -73,9 +68,18 @@ impl StoreStream {
         Ok(())
     }
 
-    pub async fn read(&mut self) -> anyhow::Result<Data> {
-        let mut decoder = async_compression::tokio::bufread::DeflateDecoder::new(&mut self.file);
-        let size = decoder.read_varint_async().await?;
+    pub async fn read(&mut self) -> anyhow::Result<Option<Data>> {
+        let size = match self.file.read_varint_async().await {
+            Ok(n) => n,
+            Err(err) => {
+                if matches!(err.kind(), std::io::ErrorKind::UnexpectedEof) {
+                    return Ok(None);
+                } else {
+                    return Err(err.into());
+                }
+            }
+        };
+
         let mut buf = SmallVec::<
             [u8; size_of::<Data>()
                 + if cfg!(target_os = "linux") {
@@ -87,8 +91,8 @@ impl StoreStream {
         buf.reserve_exact(size);
         buf.resize(size, 0);
 
-        decoder.read_exact(&mut buf).await?;
+        self.file.read_exact(&mut buf).await?;
 
-        Ok(bincode::decode_from_slice(&buf, *BINCODE_CONFIG)?.0)
+        Ok(Some(bincode::decode_from_slice(&buf, *BINCODE_CONFIG)?.0))
     }
 }

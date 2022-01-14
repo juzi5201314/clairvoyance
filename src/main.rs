@@ -2,10 +2,12 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use argh::FromArgs;
+use clairvoyance::draw::{render_cpu_time, render_cpu_usage, render_memory};
 use heim::process::Pid;
 
 use clairvoyance::monitor::Monitor;
 use clairvoyance::shutdown_notify::ShutdownNotify;
+use clairvoyance::store::StoreStream;
 
 #[tokio::main]
 async fn main() {
@@ -33,8 +35,21 @@ async fn main() {
 
             shutdown_handle.wait_shutdown(args.shutdown_timeout.0).await;
         }
-        SubCommandEnum::Render(_) => {
-            todo!()
+        SubCommandEnum::Render(args) => {
+            let mut stream = StoreStream::open(args.file)
+                .await
+                .expect("failed to open store stream");
+            let mut data = Vec::new();
+            while let Some(d) = stream.read().await.unwrap() {
+                data.push(d);
+            }
+            if args.memory {
+                render_memory(&data, args.out_dir.join("memory.svg")).unwrap();
+            }
+            if args.cpu {
+                render_cpu_time(&data, args.out_dir.join("cpu_time.svg")).unwrap();
+                render_cpu_usage(&data, args.out_dir.join("cpu_usage.svg")).unwrap();
+            }
         }
     }
 }
@@ -98,7 +113,23 @@ struct SubCommandRecord {
 #[derive(FromArgs)]
 #[argh(subcommand, name = "render")]
 /// render result
-struct SubCommandRender {}
+struct SubCommandRender {
+    #[argh(positional)]
+    /// the intermediate file obtained by record
+    file: PathBuf,
+
+    #[argh(option, short = 'o', default = "PathBuf::new().join(\".\")")]
+    /// output directory. default: "."
+    out_dir: PathBuf,
+
+    #[argh(switch, short = 'm')]
+    /// render memory result
+    memory: bool,
+
+    #[argh(switch, short = 'c')]
+    /// render cpu result
+    cpu: bool,
+}
 
 struct ParseDuration(Duration);
 
