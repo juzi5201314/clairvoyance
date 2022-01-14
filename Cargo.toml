@@ -27,3 +27,6 @@ plotters = { version = "0.3.1", features = ["svg_backend", "area_series", "line_
 integer-encoding = { version = "3.0.2", features = ["tokio_async"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+
+[profile.release]
+strip = true

@@ -192,3 +192,98 @@ where
 
     Ok(())
 }
+
+pub fn render_io<P>(data: &[Data], output: P) -> anyhow::Result<()>
+where
+    P: AsRef<Path>,
+{
+    let to_mb = |b: u64| Byte::from(b).get_adjusted_unit(ByteUnit::MB).get_value() as u64;
+
+    let x_len = data.len();
+    let y_len = [
+        data.iter()
+            .map(|data| data.io.bytes_written)
+            .map(to_mb)
+            .max()
+            .unwrap_or(0),
+        data.iter()
+            .map(|data| data.io.bytes_read)
+            .map(to_mb)
+            .max()
+            .unwrap_or(0),
+        data.iter()
+            .filter_map(|data| data.io.disk_written)
+            .map(to_mb)
+            .max()
+            .unwrap_or(0),
+        data.iter()
+            .filter_map(|data| data.io.disk_read)
+            .map(to_mb)
+            .max()
+            .unwrap_or(0),
+        data.iter()
+            .filter_map(|data| data.io.syscall_written)
+            .map(to_mb)
+            .max()
+            .unwrap_or(0),
+        data.iter()
+            .filter_map(|data| data.io.syscall_read)
+            .map(to_mb)
+            .max()
+            .unwrap_or(0),
+    ]
+    .iter()
+    .max()
+    .cloned()
+    .unwrap_or(0);
+    let root = SVGBackend::new(&output, (1920, 1080)).into_drawing_area();
+
+    root.fill(&WHITE)?;
+
+    let mut chart = ChartBuilder::on(&root)
+        .set_label_area_size(LabelAreaPosition::Left, (8).percent())
+        .set_label_area_size(LabelAreaPosition::Bottom, (4).percent())
+        .caption("I/O", ("sans-serif", (5).percent_height()))
+        .margin((1).percent())
+        .build_cartesian_2d(0..x_len, 0..y_len)?;
+
+    chart.configure_mesh().y_desc("MB").draw()?;
+
+    let elems: Vec<(&'static str, RGBColor, Box<dyn Fn(&Data) -> u64>)> = vec![
+        ("bytes_written", GREEN, box |d: &Data| d.io.bytes_written),
+        ("bytes_read", GREEN, box |d: &Data| d.io.bytes_read),
+        ("disk_written", GREEN, box |d: &Data| {
+            d.io.disk_written.unwrap_or_default()
+        }),
+        ("disk_read", GREEN, box |d: &Data| {
+            d.io.disk_read.unwrap_or_default()
+        }),
+        ("syscall_written", GREEN, box |d: &Data| {
+            d.io.syscall_written.unwrap_or_default()
+        }),
+        ("syscall_read", GREEN, box |d: &Data| {
+            d.io.syscall_read.unwrap_or_default()
+        }),
+    ];
+
+    for (label, color, elem) in elems {
+        chart
+            .draw_series(LineSeries::new(
+                data.iter()
+                    .enumerate()
+                    .map(|(x, data)| (x, to_mb(elem(data)))),
+                color.stroke_width(3),
+            ))?
+            .label(label)
+            .legend(move |(x, y)| Rectangle::new([(x, y - 5), (x + 10, y + 5)], color.filled()));
+    }
+
+    chart.configure_series_labels().border_style(BLACK).draw()?;
+
+    root.present()?;
+
+    drop(chart);
+    drop(root);
+
+    Ok(())
+}

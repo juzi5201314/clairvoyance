@@ -5,7 +5,7 @@ use std::time::Duration;
 use argh::FromArgs;
 use heim::process::Pid;
 
-use clairvoyance::draw::{render_cpu_time, render_cpu_usage, render_memory};
+use clairvoyance::draw::{render_cpu_time, render_cpu_usage, render_io, render_memory};
 use clairvoyance::monitor::Monitor;
 use clairvoyance::shutdown_notify::ShutdownNotify;
 use clairvoyance::store::StoreStream;
@@ -64,6 +64,9 @@ async fn main() {
             if args.cpu {
                 render_cpu_time(&data, args.out_dir.join("cpu_time.svg")).unwrap();
                 render_cpu_usage(&data, args.out_dir.join("cpu_usage.svg")).unwrap();
+            }
+            if args.io {
+                render_io(&data, args.out_dir.join("io.svg")).unwrap();
             }
         }
     }
@@ -144,6 +147,10 @@ struct SubCommandRender {
     #[argh(switch, short = 'c')]
     /// render cpu result
     cpu: bool,
+
+    #[argh(switch, short = 'i')]
+    /// render io result
+    io: bool,
 
     #[argh(switch, short = 'j')]
     /// convert intermediate files to json format
