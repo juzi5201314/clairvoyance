@@ -35,14 +35,12 @@ jobs:
       with:
         key: ${{ matrix.target }}
     - name: Install cross
-      run: cargo install --version 0.1.16 cross
-    - name: Run tests
-      run: cross test --release --target ${{ matrix.target }} --verbose
+      run: cargo +nightly install --version 0.1.16 cross
     - name: Build release
-      run: cross build --release --target ${{ matrix.target }}
+      run: cross +nightly build --release --target ${{ matrix.target }}
     - name: Run UPX
       continue-on-error: true
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
       uses: crazy-max/ghaction-upx@v1
       with:
         version: v3.96
@@ -50,12 +48,19 @@ jobs:
         args: -q --best --lzma
     - uses: actions/upload-artifact@v2
       with:
-        name: rathole-${{ matrix.target }}
+        name: clairvoyance-${{ matrix.target }}
         path: target/${{ matrix.target }}/release/${{ matrix.bin }}
+    - name: Zip Release
+      uses: TheDoctor0/zip-release@0.6.1
+      with:
+        type: zip
+        filename: clairvoyance-${{ matrix.target }}.zip
+        directory: target/${{ matrix.target }}/release/
+        path: ${{ matrix.bin }}
     - name: Publish
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: target/${{ matrix.target }}/release/${{ matrix.bin }}
+        files: target/${{ matrix.target }}/release/clairvoyance-${{ matrix.target }}.zip
         generate_release_notes: true
         draft: true
