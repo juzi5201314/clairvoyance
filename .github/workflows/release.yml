@@ -28,17 +28,20 @@ jobs:
             target: x86_64-pc-windows-msvc
             bin: clairvoyance.exe
     steps:
+    - name: install musl
+      if: matrix.os == 'ubuntu-latest'
+      run: sudo apt install musl-tools
+    
     - uses: actions/checkout@v2
     - uses: actions-rs/toolchain@v1
       with:
         toolchain: nightly
+        target: ${{ matrix.target }}
     - uses: Swatinem/rust-cache@v1
       with:
         key: ${{ matrix.target }}
-    - name: Install cross
-      run: cargo +nightly install --version 0.1.16 cross
     - name: Build release
-      run: cross +nightly build --release --target ${{ matrix.target }}
+      run: cargo +nightly build --release --target ${{ matrix.target }}
     - name: Run UPX
       continue-on-error: true
       if: matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest'
