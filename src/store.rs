@@ -10,7 +10,7 @@ use tokio::io::{AsyncReadExt, AsyncWriteExt, BufStream};
 use crate::data::{Data, NetIo};
 
 pub static BINCODE_CONFIG: Lazy<bincode::config::Configuration> =
-    Lazy::new(bincode::config::Configuration::standard);
+    Lazy::new(bincode::config::standard);
 
 // 存储数据到中间文件的流
 pub struct StoreStream {

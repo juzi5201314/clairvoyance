@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 memchr = "2.3.4"
 heim = { version = "0.1.0-rc.1", features = ["full"] }
-bincode = "2.0.0-beta.0"
+bincode = "2.0.0-rc.2"
 tokio = { version = "1", features = ["full", "parking_lot"] }
 once_cell = "^1"
 anyhow = "1.0"
